@@ -1,7 +1,7 @@
 import telebot
 import sqlite3
 from telebot import types
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from init import init
 from database import db
 from commands.class_register import class_register
@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
 lessons = list()
 lessonsid = list()
-day = ""
+day = "1"
 
 
 @bot.message_handler(commands=['start'])
@@ -48,7 +48,7 @@ def send_text(message):
         daykb.add(button1, button2, button3, button4, button5, button6, button7)
         bot.send_message(message.chat.id, "Выберите день недели", reply_markup=daykb)
     if message.text.strip() == 'Просмотр ДЗ':
-        daykb = types.InlineKeyboardMarkup(row_width=2)
+        daykbread = types.InlineKeyboardMarkup(row_width=2)
         button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayread')
         button2 = types.InlineKeyboardButton("вторник", callback_data='tuesdayread')
         button3 = types.InlineKeyboardButton("среда", callback_data='wednesdayread')
@@ -56,8 +56,8 @@ def send_text(message):
         button5 = types.InlineKeyboardButton("пятница", callback_data='fridayread')
         button6 = types.InlineKeyboardButton("суббота", callback_data='saturdayread')
         button7 = types.InlineKeyboardButton("воскресенье", callback_data='sundayread')
-        daykb.add(button1, button2, button3, button4, button5, button6, button7)
-        bot.send_message(message.chat.id, "Выберите день недели", reply_markup=daykb)
+        daykbread.add(button1, button2, button3, button4, button5, button6, button7)
+        bot.send_message(message.chat.id, "Выберите день недели", reply_markup=daykbread)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -65,10 +65,16 @@ def callback_inline(call):
     global lessons, lessonsid, day
     req = call.data.split('_')
     if req[0] == "adressentry":
-        print(1)
         user = db.fetch_user(call.message.from_user.id)
         s = getattr(user.get_hw_db().fetch_user(1), f"wd{day}")
-        bot.register_next_step_handler(call.message,day,entryhw)
+        s = s.str_repr
+        print(s)
+        if s == "":
+            s = "Не записано"
+        bot.edit_message_text(f"{s}", chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, "Введите домашнее задание")
+        bot.register_next_step_handler(call.message, entryhw)
+
     if req[0] == "weekentry":
         daykb = types.InlineKeyboardMarkup(row_width=2)
         button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
@@ -83,16 +89,28 @@ def callback_inline(call):
                               message_id=call.message.message_id)
     if req[0] == "weekread":
         daykb = types.InlineKeyboardMarkup(row_width=2)
-        button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
-        button2 = types.InlineKeyboardButton("вторник", callback_data='tuesdayentry')
-        button3 = types.InlineKeyboardButton("среда", callback_data='wednesdayentry')
-        button4 = types.InlineKeyboardButton("черверг", callback_data='thursdayentry')
-        button5 = types.InlineKeyboardButton("пятница", callback_data='fridayentry')
-        button6 = types.InlineKeyboardButton("суббота", callback_data='saturdayentry')
-        button7 = types.InlineKeyboardButton("воскресенье", callback_data='sundayentry')
+        button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayread')
+        button2 = types.InlineKeyboardButton("вторник", callback_data='tuesdayread')
+        button3 = types.InlineKeyboardButton("среда", callback_data='wednesdayread')
+        button4 = types.InlineKeyboardButton("черверг", callback_data='thursdayread')
+        button5 = types.InlineKeyboardButton("пятница", callback_data='fridayread')
+        button6 = types.InlineKeyboardButton("суббота", callback_data='saturdayread')
+        button7 = types.InlineKeyboardButton("воскресенье", callback_data='sundayread')
         daykb.add(button1, button2, button3, button4, button5, button6, button7)
         bot.edit_message_text(f"Выберите день недели", reply_markup=daykb, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
+    if req[0] == "adressread":
+        user = db.fetch_user(call.message.from_user.id)
+        s = getattr(user.get_hw_db().fetch_user(1), f"wd{day}")
+        s = s.str_repr
+        print("111", s)
+        if s == "":
+            s = "Не записано"
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 1
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f"{s}", chat_id=call.message.chat.id, message_id=call.message.message_id,reply_markup=markup)
+
     if req[0] == "mondayentry":
         day = "1"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
@@ -200,12 +218,162 @@ def callback_inline(call):
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на воскресенье', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
+    if req[0] == "mondayread":
+        day = "1"
+        lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
+        lessons = db.fetch_user(call.message.chat.id).general_schedule.wd1.lessons.decode()
+        user = db.fetch_user(call.message.chat.id)
+        print(lessonsid)
+        print(lessons)
+        print(user)
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 2
+        for i in range(0, len(lessons)):
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressread"))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f'расписание на понедельник', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "tuesdayread":
+        day = "2"
+        lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
+        lessons = db.fetch_user(call.message.chat.id).general_schedule.wd2.lessons.decode()
+        user = db.fetch_user(call.message.chat.id)
+        print(lessonsid)
+        print(lessons)
+        print(user)
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 2
+        for i in range(0, len(lessons)):
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressread"))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f'расписание на вторник', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "wednesdayread":
+        day = "3"
+        lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
+        lessons = db.fetch_user(call.message.chat.id).general_schedule.wd3.lessons.decode()
+        user = db.fetch_user(call.message.chat.id)
+        print(lessonsid)
+        print(lessons)
+        print(user)
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 2
+        for i in range(0, len(lessons)):
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressread"))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f'расписание на среду', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "thursdayread":
+        day = "4"
+        lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
+        lessons = db.fetch_user(call.message.chat.id).general_schedule.wd4.lessons.decode()
+        user = db.fetch_user(call.message.chat.id)
+        print(lessonsid)
+        print(lessons)
+        print(user)
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 2
+        for i in range(0, len(lessons)):
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressread"))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f'расписание на четверг', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "fridayread":
+        day = "5"
+        lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
+        lessons = db.fetch_user(call.message.chat.id).general_schedule.wd5.lessons.decode()
+        user = db.fetch_user(call.message.chat.id)
+        print(lessonsid)
+        print(lessons)
+        print(user)
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 2
+        for i in range(0, len(lessons)):
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressread"))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f'расписание на пятницу', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "saturdayread":
+        day = "6"
+        lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
+        lessons = db.fetch_user(call.message.chat.id).general_schedule.wd6.lessons.decode()
+        user = db.fetch_user(call.message.chat.id)
+        print(lessonsid)
+        print(lessons)
+        print(user)
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 2
+        for i in range(0, len(lessons)):
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressread"))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f'расписание на субботу', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "sundayread":
+        day = "7"
+        lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
+        lessons = db.fetch_user(call.message.chat.id).general_schedule.wd7.lessons.decode()
+        user = db.fetch_user(call.message.chat.id)
+        print(lessonsid)
+        print(lessons)
+        print(user)
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 2
+        for i in range(0, len(lessons)):
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressread"))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekread"))
+        bot.edit_message_text(f'расписание на воскресенье', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
 
 
-def entryhw(message,day):
+def weekentrydays(message):
+    daykb = types.InlineKeyboardMarkup(row_width=2)
+    button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
+    button2 = types.InlineKeyboardButton("вторник", callback_data='tuesdayentry')
+    button3 = types.InlineKeyboardButton("среда", callback_data='wednesdayentry')
+    button4 = types.InlineKeyboardButton("черверг", callback_data='thursdayentry')
+    button5 = types.InlineKeyboardButton("пятница", callback_data='fridayentry')
+    button6 = types.InlineKeyboardButton("суббота", callback_data='saturdayentry')
+    button7 = types.InlineKeyboardButton("воскресенье", callback_data='sundayentry')
+    daykb.add(button1, button2, button3, button4, button5, button6, button7)
+    bot.edit_message_text(f"Выберите день недели", reply_markup=daykb, chat_id=message.chat.id,
+                          message_id=message.message_id)
+
+
+def weekreaddays(message):
+    daykb = types.InlineKeyboardMarkup(row_width=2)
+    button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
+    button2 = types.InlineKeyboardButton("вторник", callback_data='tuesdayentry')
+    button3 = types.InlineKeyboardButton("среда", callback_data='wednesdayentry')
+    button4 = types.InlineKeyboardButton("черверг", callback_data='thursdayentry')
+    button5 = types.InlineKeyboardButton("пятница", callback_data='fridayentry')
+    button6 = types.InlineKeyboardButton("суббота", callback_data='saturdayentry')
+    button7 = types.InlineKeyboardButton("воскресенье", callback_data='sundayentry')
+    daykb.add(button1, button2, button3, button4, button5, button6, button7)
+    bot.edit_message_text(f"Выберите день недели", reply_markup=daykb, chat_id=message.chat.id,
+                          message_id=message.message_id)
+
+
+def weekentry(message):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = KeyboardButton("Просмотр ДЗ")
+    btn2 = KeyboardButton("Запись ДЗ")
+    markup.add(btn1, btn2)
+    bot.send_message(message.chat.id, "Домашнее задание записано, выберите что хотите сделать дальше",
+                     reply_markup=markup)
+
+
+def entryhw(message):
+    global day
     s = message.text.strip()
-    user = message.chat.id
-    user.get_hw_db().update_user(1, **{f"wd{day}": f"{s}"})
+    uid = message.chat.id
+    user = db.fetch_user(uid)
+    user.get_hw_db().update_user(1, **{f"wd{day}_str_repr": f"{s}"})
+    weekentry(message)
+
+
+def readhw(message):
+    global day
+
 
 
 bot.polling(none_stop=True)

@@ -71,7 +71,7 @@ class Homework:
 
     @staticmethod
     def default(nsubjects: int):
-        return Homework("::" * (nsubjects - 1))
+        return "::" * (nsubjects - 1)
 
     def decode(self) -> list[HWSubjectPresent|HWSubjectNotSetYet|HWSubjectNoHomework]:
         return [(HWSubjectPresent(homework=hw) if hw != HWSubjectNoHomework.STR_REPR else
