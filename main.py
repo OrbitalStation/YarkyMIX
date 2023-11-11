@@ -67,7 +67,8 @@ def callback_inline(call):
     if req[0] == "adressentry":
         print(1)
         user = db.fetch_user(call.message.from_user.id)
-        print(getattr(user.get_hw_db().fetch_user(1), f"wd{day}"))
+        s = getattr(user.get_hw_db().fetch_user(1), f"wd{day}")
+        bot.register_next_step_handler(call.message,day,entryhw)
     if req[0] == "weekentry":
         daykb = types.InlineKeyboardMarkup(row_width=2)
         button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
@@ -199,6 +200,12 @@ def callback_inline(call):
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на воскресенье', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
+
+
+def entryhw(message,day):
+    s = message.text.strip()
+    user = message.chat.id
+    user.get_hw_db().update_user(1, **{f"wd{day}": f"{s}"})
 
 
 bot.polling(none_stop=True)
