@@ -30,7 +30,8 @@ def send_text(message):
         keyboard = telebot.types.ReplyKeyboardMarkup(True)
         keyboard.row('Запись ДЗ', 'Просмотр ДЗ')
         bot.send_message(message.chat.id, 'Привет! Выбери что мне необходимо сделать.', reply_markup=keyboard)
-        '''daykb = types.InlineKeyboardMarkup(row_width=2)
+    if message.text.strip() == 'Запись ДЗ':
+        daykb = types.InlineKeyboardMarkup(row_width=2)
         button1 = types.InlineKeyboardButton("понедельник", callback_data='monday')
         button2 = types.InlineKeyboardButton("вторник", callback_data='tuesday')
         button3 = types.InlineKeyboardButton("среда", callback_data='wednesday')
@@ -38,27 +39,17 @@ def send_text(message):
         button5 = types.InlineKeyboardButton("пятница", callback_data='friday')
         button6 = types.InlineKeyboardButton("суббота", callback_data='saturday')
         daykb.add(button1, button2, button3, button4, button5, button6)
-        bot.send_message(message.chat.id, "выберете день недели", reply_markup=daykb)'''
-    '''if message.text.strip() == 'Запись ДЗ':
-            daykb = types.InlineKeyboardMarkup(row_width=2)
-            button1 = types.InlineKeyboardButton("понедельник", callback_data='monday')
-            button2 = types.InlineKeyboardButton("вторник", callback_data='tuesday')
-            button3 = types.InlineKeyboardButton("среда", callback_data='wednesday')
-            button4 = types.InlineKeyboardButton("черверг", callback_data='thursday')
-            button5 = types.InlineKeyboardButton("пятница", callback_data='friday')
-            button6 = types.InlineKeyboardButton("суббота", callback_data='saturday')
-            daykb.add(button1, button2, button3, button4, button5, button6)
-            bot.send_message(message.chat.id, "выберете день недели", reply_markup=daykb)
+        bot.send_message(message.chat.id, "выберете день недели", reply_markup=daykb)
     if message.text.strip() == 'Просмотр ДЗ':
         daykb = types.InlineKeyboardMarkup(row_width=2)
-                button1 = types.InlineKeyboardButton("понедельник", callback_data='monday')
-                button2 = types.InlineKeyboardButton("вторник", callback_data='tuesday')
-                button3 = types.InlineKeyboardButton("среда", callback_data='wednesday')
-                button4 = types.InlineKeyboardButton("черверг", callback_data='thursday')
-                button5 = types.InlineKeyboardButton("пятница", callback_data='friday')
-                button6 = types.InlineKeyboardButton("суббота", callback_data='saturday')
-                daykb.add(button1, button2, button3, button4, button5, button6)
-                bot.send_message(message.chat.id, "выберете день недели", reply_markup=daykb)'''
+        button1 = types.InlineKeyboardButton("понедельник", callback_data='monday')
+        button2 = types.InlineKeyboardButton("вторник", callback_data='tuesday')
+        button3 = types.InlineKeyboardButton("среда", callback_data='wednesday')
+        button4 = types.InlineKeyboardButton("черверг", callback_data='thursday')
+        button5 = types.InlineKeyboardButton("пятница", callback_data='friday')
+        button6 = types.InlineKeyboardButton("суббота", callback_data='saturday')
+        daykb.add(button1, button2, button3, button4, button5, button6)
+        bot.send_message(message.chat.id, "выберете день недели", reply_markup=daykb)
 
 
 @bot.callback_query_handler(func=lambda call: True)
