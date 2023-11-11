@@ -2,10 +2,56 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
+class LessonDecoded:
+    name: str
+
+
+@dataclass(frozen=True)
+class LessonsList:
+    # <lessonData>;<nextLesson>;etc.
+    str_repr: str
+
+    def decode(self) -> list[LessonDecoded]:
+        return 
+
+
+@dataclass(frozen=True)
+class WeekDaySchedule:
+    lessons: LessonsList
+
+
+@dataclass(frozen=True)
+class Schedule:
+    wd1: WeekDaySchedule
+    wd2: WeekDaySchedule
+    wd3: WeekDaySchedule
+    wd4: WeekDaySchedule
+    wd5: WeekDaySchedule
+    wd6: WeekDaySchedule
+    wd7: WeekDaySchedule
+
+
+@dataclass(frozen=True)
+class SubjectDecoded:
+    name: str
+
+
+@dataclass(frozen=True)
+class Subjects:
+    # physics;math;biology <-etc.
+    str_repr: str
+
+    def decode(self) -> list[SubjectDecoded]:
+        return [SubjectDecoded(name=s) for s in self.split(';')]
+
+
+@dataclass(frozen=True)
 class User:
     # Primary key
     uid: int
-    ar: bool
+    general_schedule: Schedule
+    subjects: Subjects
+
 
 class Database:
     @staticmethod
