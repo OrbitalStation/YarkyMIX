@@ -1,3 +1,6 @@
 .idea
 .vscode
+venv
+Scripts
+Lib
 __pycache__
