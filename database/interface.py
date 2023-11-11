@@ -5,7 +5,7 @@ from dataclasses import dataclass
 class User:
     # Primary key
     uid: int
-
+    ar: bool
 
 class Database:
     @staticmethod

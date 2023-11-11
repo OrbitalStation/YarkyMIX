@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from properties import const
 from sqlite3 import Cursor
 from database.interface import Database, User
@@ -8,7 +10,8 @@ CREATE_USER_SQL: tuple[str, tuple] | None = None
 
 PY2SQL = {
     'int': 'INT',
-    'str': 'TEXT'
+    'str': 'TEXT',
+    'bool': 'BOOLEAN'
 }
 
 
