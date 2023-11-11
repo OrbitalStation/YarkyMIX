@@ -70,6 +70,8 @@ class SQLiteDB(Database):
     def fetch_user(self, uid: int):
         if (fetched := _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)) is None:
             _create_user(uid, self.name, self.path, self._UFIELDS)
+            if self._new_user_defaults is not None:
+                self.update_user(uid, **self._new_user_defaults)
             fetched = _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)
         return fetched
 
