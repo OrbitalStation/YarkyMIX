@@ -3,5 +3,5 @@ from telebot import TeleBot
 
 
 def init():
-    load_properties("assets")
+    load_properties("assets/properties")
     return TeleBot(const("token"))
