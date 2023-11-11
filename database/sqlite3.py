@@ -7,8 +7,6 @@ import dataclasses as dc
 from typing import get_type_hints
 import sqlite3
 
-CREATE_TABLE_SQL: str | None = None
-CREATE_USER_SQL: tuple[str, tuple] | None = None
 
 PY2SQL = {
     'int': 'INT',
@@ -51,6 +49,17 @@ class SQLiteDB(Database):
         self.__name = None
         self._new_user_defaults = default_values_for_new_users
         self._UFIELDS = _unfold_annotations("", user)
+        self._user_ty = user
+
+        fields = ', '.join(
+            [f'{field} {PY2SQL[value.__name__]}{" PRIMARY KEY" if field == "uid" else ""}'
+             for field, value in self._UFIELDS.items()])
+        self._CREATE_TABLE_SQL = f"CREATE TABLE IF NOT EXISTS {name}({fields});"
+
+        fields, values = zip(*[(field, ty()) for field, ty in self._UFIELDS.items() if field != 'uid'])
+        placeholders = ('?,' * len(self._UFIELDS))[:-1]
+        self._CREATE_USER_SQL = f"INSERT INTO {name}" \
+                          f" (uid, {', '.join(fields)}) VALUES({placeholders});", values
 
     @property
     def path(self):
@@ -67,48 +76,33 @@ class SQLiteDB(Database):
         return self.__name
 
     def update_user(self, uid: int, **kwargs):
-        if _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS) is None:
-            _create_user(uid, self.name, self.path, self._UFIELDS)
-            if self._new_user_defaults is not None:
-                self.update_user(uid, **self._new_user_defaults)
+        if _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._CREATE_TABLE_SQL, self._user_ty) is None:
+            _create_user(uid, self.path, self._CREATE_USER_SQL, self._new_user_defaults, self)
         update = ", ".join([(field + ' = ' + '"' + value.replace('"', '""') + '"') for field, value in kwargs.items()])
         _mutate(f'UPDATE {self.name} SET {update} WHERE uid = ?', self.path, (uid,))
 
     def fetch_user(self, uid: int):
-        if (fetched := _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)) is None:
-            _create_user(uid, self.name, self.path, self._UFIELDS)
-            if self._new_user_defaults is not None:
-                self.update_user(uid, **self._new_user_defaults)
-            fetched = _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)
+        if (fetched := _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._CREATE_TABLE_SQL, self._user_ty)) is None:
+            _create_user(uid, self.path, self._CREATE_USER_SQL, self._new_user_defaults, self)
+            fetched = _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._CREATE_TABLE_SQL, self._user_ty)
         return fetched
 
 
-def _fetch_user_or_none_if_nonpresent(uid: int, name, path, UFIELDS) -> User | None:
-    _create_table_if_not_exists(name, path, UFIELDS)
+def _fetch_user_or_none_if_nonpresent(uid: int, name, path, TABLE_SQL, user_ty: type):
+    _create_table_if_not_exists(path, TABLE_SQL)
     if (fetched := _fetch(f"SELECT * FROM {name} WHERE uid=?", path, (uid,)).fetchone()) is None:
         return
-    return _dataclass_from_sql(User, list(fetched)[::-1])
+    return _dataclass_from_sql(user_ty, list(fetched)[::-1])
 
 
-def _create_table_if_not_exists(name, path, UFIELDS):
-    global CREATE_TABLE_SQL
-    if CREATE_TABLE_SQL is None:
-        fields = ', '.join(
-            [f'{field} {PY2SQL[value.__name__]}{" PRIMARY KEY" if field == "uid" else ""}'
-             for field, value in UFIELDS.items()])
-        CREATE_TABLE_SQL = f"CREATE TABLE IF NOT EXISTS {name}({fields});"
-    _mutate(CREATE_TABLE_SQL, path)
+def _create_table_if_not_exists(path, TABLE_SQL):
+    _mutate(TABLE_SQL, path)
 
 
-def _create_user(uid: int, name, path, UFIELDS):
-    global CREATE_USER_SQL
-
-    if CREATE_USER_SQL is None:
-        fields, values = zip(*[(field, ty()) for field, ty in UFIELDS.items() if field != 'uid'])
-        placeholders = ('?,' * len(UFIELDS))[:-1]
-        CREATE_USER_SQL = f"INSERT INTO {name}" \
-                          f" (uid, {', '.join(fields)}) VALUES({placeholders});", values
-    _mutate(CREATE_USER_SQL[0], path, (uid, *CREATE_USER_SQL[1]))
+def _create_user(uid: int, path, USER_SQL, defaults, db):
+    _mutate(USER_SQL[0], path, (uid, *USER_SQL[1]))
+    if defaults is not None:
+        db.update_user(uid, **defaults)
 
 
 def _mutate(request: str, path, *args, **kwargs):
