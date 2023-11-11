@@ -62,13 +62,25 @@ def send_text(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    # global lessons, lessonsid, day
+    global lessons, lessonsid, day
     req = call.data.split('_')
-    if req[0] == "adress_":
+    if req[0] == "adressentry":
         print(1)
-        # user = db.fetch_user(call.message.from_user.id)
-        # print(getattr(user.get_hw_db().fetch_user(1), f"wd{day}"))
+        user = db.fetch_user(call.message.from_user.id)
+        print(getattr(user.get_hw_db().fetch_user(1), f"wd{day}"))
     if req[0] == "weekentry":
+        daykb = types.InlineKeyboardMarkup(row_width=2)
+        button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
+        button2 = types.InlineKeyboardButton("вторник", callback_data='tuesdayentry')
+        button3 = types.InlineKeyboardButton("среда", callback_data='wednesdayentry')
+        button4 = types.InlineKeyboardButton("черверг", callback_data='thursdayentry')
+        button5 = types.InlineKeyboardButton("пятница", callback_data='fridayentry')
+        button6 = types.InlineKeyboardButton("суббота", callback_data='saturdayentry')
+        button7 = types.InlineKeyboardButton("воскресенье", callback_data='sundayentry')
+        daykb.add(button1, button2, button3, button4, button5, button6, button7)
+        bot.edit_message_text(f"Выберите день недели", reply_markup=daykb, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "weekread":
         daykb = types.InlineKeyboardMarkup(row_width=2)
         button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
         button2 = types.InlineKeyboardButton("вторник", callback_data='tuesdayentry')
@@ -91,7 +103,9 @@ def callback_inline(call):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
         for i in range(0, len(lessons)):
-            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_"))
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data="adressentry"))
+        # button7 = types.InlineKeyboardButton("воскресенье", callback_data='adressentry')
+        # markup.add(button7)
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на понедельник', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -106,7 +120,7 @@ def callback_inline(call):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
         for i in range(0, len(lessons)):
-            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_{lessons[i]}"))
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_entry"))
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на вторник', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -121,7 +135,7 @@ def callback_inline(call):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
         for i in range(0, len(lessons)):
-            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_{lessons[i]}"))
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_entry"))
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на среду', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -136,7 +150,7 @@ def callback_inline(call):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
         for i in range(0, len(lessons)):
-            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_{lessons[i]}"))
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_entry"))
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на четверг', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -151,7 +165,7 @@ def callback_inline(call):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
         for i in range(0, len(lessons)):
-            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_{lessons[i]}"))
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_entry"))
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на пятница', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -166,7 +180,7 @@ def callback_inline(call):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
         for i in range(0, len(lessons)):
-            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_{lessons[i]}"))
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_entry"))
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на суббота', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -181,7 +195,7 @@ def callback_inline(call):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
         for i in range(0, len(lessons)):
-            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_{lessons[i]}"))
+            markup.add(InlineKeyboardButton(lessonsid[int(lessons[i].idx)].name, callback_data=f"adress_entry"))
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на воскресенье', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
