@@ -4,3 +4,5 @@ venv
 Scripts
 Lib
 __pycache__
+
+sensitive.properties
