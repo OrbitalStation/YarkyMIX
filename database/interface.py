@@ -67,6 +67,7 @@ class Homework:
     # hw1::hw2::hw3::etc.
     str_repr: str
 
+    @staticmethod
     def default(nsubjects: int):
         return Homework("::" * (nsubjects - 1))
 
@@ -110,7 +111,7 @@ class User:
 
     def get_hw_db(self):
         from .sqlite3 import SQLiteDB
-        DEFAULT_FOR_NEW = {f'wd{i}': getattr(self.general_schedule, f"wd{i}").lessons.str_repr.count(';') + 1 for i in range(1, 8)}
+        DEFAULT_FOR_NEW = {f'wd{i}': Homework.default(getattr(self.general_schedule, f"wd{i}").lessons.str_repr.count(';') + 1) for i in range(1, 8)}
         return SQLiteDB(const("dbMainPath"), f"hw{self.uid}", HWUser, default_values_for_new_users=DEFAULT_FOR_NEW)
 
 
