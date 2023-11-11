@@ -5,9 +5,10 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from init import init
 from database import db
 
-
 if __name__ == '__main__':
     bot = init()
+
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -27,9 +28,12 @@ def send_welcome(message):
 @bot.message_handler(func=lambda message: True)
 def send_text(message):
     if message.text.strip() == '👋 Зарегистрировать класс':
-        keyboard = telebot.types.ReplyKeyboardMarkup(True)
-        keyboard.row('Запись ДЗ', 'Просмотр ДЗ')
-        bot.send_message(message.chat.id, 'Привет! Выбери что мне необходимо сделать.', reply_markup=keyboard)
+        # keyboard = telebot.types.ReplyKeyboardMarkup(True)
+        # keyboard.row('Запись ДЗ', 'Просмотр ДЗ')
+        mesg = bot.send_message(message.chat.id, 'Привет! Чтобы у меня была возможность помогать тебе, мне надо '
+                                                 'узнать твоё расписание. Напиши мне своё расписание на понедельник. '
+                                                 'Пример:\nМатематика\nРусский\nФизра\nОБЖ\nАнглийский')
+        bot.register_next_step_handler(mesg, wd1)
     if message.text.strip() == 'Запись ДЗ':
         daykb = types.InlineKeyboardMarkup(row_width=2)
         button1 = types.InlineKeyboardButton("понедельник", callback_data='monday')
@@ -50,6 +54,55 @@ def send_text(message):
         button6 = types.InlineKeyboardButton("суббота", callback_data='saturday')
         daykb.add(button1, button2, button3, button4, button5, button6)
         bot.send_message(message.chat.id, "выберете день недели", reply_markup=daykb)
+
+
+def wd1(message):
+    s = message.text.strip()
+    print(s, 1)
+    mesg = bot.send_message(message.chat.id,
+                            'Теперь на вторник')
+    bot.register_next_step_handler(mesg, wd2)
+
+
+def wd2(message):
+    s = message.text.strip()
+    print(s, 2)
+    mesg = bot.send_message(message.chat.id,
+                            'Теперь на среду')
+    bot.register_next_step_handler(mesg, wd3)
+
+
+def wd3(message):
+    s = message.text.strip()
+    print(s, 3)
+    mesg = bot.send_message(message.chat.id,
+                            'Теперь на четверг')
+    bot.register_next_step_handler(mesg, wd4)
+
+
+def wd4(message):
+    s = message.text.strip()
+    print(s, 4)
+    mesg = bot.send_message(message.chat.id,
+                            'Теперь на пятницу')
+    bot.register_next_step_handler(mesg, wd5)
+
+
+def wd5(message):
+    s = message.text.strip()
+    print(s, 5)
+    endreg = types.InlineKeyboardMarkup(row_width=1)
+    button1 = types.InlineKeyboardButton("нет уроков", callback_data='nolessonsSaturday')
+    endreg.add(button1)
+    mesg = bot.send_message(message.chat.id,
+                            'Теперь на субботу. Если уроков в субботу нет, то просто нажмите на кнопку',
+                            reply_markup=endreg)
+    bot.register_next_step_handler(mesg, wd6)
+
+
+def wd6(message):
+    s = message.text.strip()
+    print(s, 6)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -81,6 +134,14 @@ def callback_inline(call):
                    InlineKeyboardButton(text=f"суббота", callback_data='saturday'))
         bot.edit_message_text(f'Выберите день недели', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
+    if req[0] == "nolessonsSaturday":
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn1 = types.KeyboardButton("Просмотр ДЗ")
+        btn2 = types.KeyboardButton("Запись ДЗ")
+        markup.add(btn1)
+        bot.send_message(call.message.chat.id,"Поздравляю! Вы заполнили расписание. Теперь можно записывать и "
+                                              "просматривать дз",reply_markup=markup)
+
         '''
 if call.data == "tuesday":
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
