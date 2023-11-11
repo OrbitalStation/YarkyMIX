@@ -3,6 +3,8 @@ from __future__ import annotations
 from properties import const
 from sqlite3 import Cursor
 from database.interface import Database, User
+import dataclasses as dc
+from typing import get_type_hints
 import sqlite3
 
 CREATE_TABLE_SQL: str | None = None
@@ -15,23 +17,25 @@ PY2SQL = {
 }
 
 
+def _annotations(duck: type):
+    resolved = get_type_hints(duck)
+    return map(lambda f: (f.name, resolved[f.name]), dc.fields(duck))
+
+
 def _unfold_annotations(field: str, ty: type) -> dict[str, type]:
-    print(repr(ty))
     if PY2SQL.get(ty.__name__) is not None:
         return {field: ty}
     if field != "":
         field += '_'
     result = {}
-    for subfield, subty in ty.__annotations__.items():
-        if type(subty) == str:
-            subty = eval(subty)
+    for subfield, subty in _annotations(ty):
         result.update(_unfold_annotations(field + subfield, subty))
     return result
 
 
 def _dataclass_from_sql(dataclass: type, sql: list):
     result = []
-    for field, ty in dataclass.__annotations__.items():
+    for _field, ty in _annotations(dataclass):
         if PY2SQL.get(ty.__name__) is not None:
             result.append(sql.pop())
             continue
