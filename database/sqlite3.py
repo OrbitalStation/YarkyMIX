@@ -36,15 +36,13 @@ def _dataclass_from_sql(dataclass: type, sql: list):
     return dataclass(*result)
 
 
-UFIELDS = _unfold_annotations("", User)
-
-
 class SQLiteDB(Database):
-    def __init__(self, path, name):
+    def __init__(self, path, name, user):
         self._path = path
         self._name = name
         self.__path = None
         self.__name = None
+        self._UFIELDS = _unfold_annotations("", user)
 
     @property
     def path(self):
@@ -61,26 +59,26 @@ class SQLiteDB(Database):
         return self.__name
 
     def update_user(self, uid: int, **kwargs):
-        if _fetch_user_or_none_if_nonpresent(uid, self.name, self.path) is None:
-            _create_user(uid, self.name, self.path)
+        if _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS) is None:
+            _create_user(uid, self.name, self.path, self._UFIELDS)
         update = ", ".join([(field + ' = ' + '"' + value.replace('"', '""') + '"') for field, value in kwargs.items()])
         _mutate(f'UPDATE {self.name} SET {update} WHERE uid = ?', self.path, (uid,))
 
     def fetch_user(self, uid: int) -> User:
-        if (fetched := _fetch_user_or_none_if_nonpresent(uid, self.name, self.path)) is None:
-            _create_user(uid)
-            fetched = _fetch_user_or_none_if_nonpresent(uid, self.name, self.path)
+        if (fetched := _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)) is None:
+            _create_user(uid, self.name, self.path, self._UFIELDS)
+            fetched = _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)
         return fetched
 
 
-def _fetch_user_or_none_if_nonpresent(uid: int, name, path) -> User | None:
-    _create_table_if_not_exists(name, path)
+def _fetch_user_or_none_if_nonpresent(uid: int, name, path, UFIELDS) -> User | None:
+    _create_table_if_not_exists(name, path, UFIELDS)
     if (fetched := _fetch(f"SELECT * FROM {name} WHERE uid=?", path, (uid,)).fetchone()) is None:
         return
     return _dataclass_from_sql(User, list(fetched)[::-1])
 
 
-def _create_table_if_not_exists(name, path):
+def _create_table_if_not_exists(name, path, UFIELDS):
     global CREATE_TABLE_SQL
     if CREATE_TABLE_SQL is None:
         fields = ', '.join(
@@ -90,7 +88,7 @@ def _create_table_if_not_exists(name, path):
     _mutate(CREATE_TABLE_SQL, path)
 
 
-def _create_user(uid: int, name, path):
+def _create_user(uid: int, name, path, UFIELDS):
     global CREATE_USER_SQL
 
     if CREATE_USER_SQL is None:

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from properties import const
 
 
 @dataclass(frozen=True)
@@ -47,16 +48,39 @@ class Subjects:
 
 
 @dataclass(frozen=True)
+class Homework:
+    value: str
+
+
+@dataclass(frozen=True)
+class HWUser:
+    # Primary key
+    uid: int
+    wd1: Homework
+    wd2: Homework
+    wd3: Homework
+    wd4: Homework
+    wd5: Homework
+    wd6: Homework
+    wd7: Homework
+
+
+@dataclass(frozen=True)
 class User:
     # Primary key
     uid: int
     general_schedule: Schedule
     subjects: Subjects
 
+    @staticmethod
+    def get_hw_db(uid: int):
+        from .sqlite3 import SQLiteDB
+        return SQLiteDB(const("dbMainPath"), f"hw{uid}", HWUser)
+
 
 class Database:
     def update_user(self, uid: int, **fields):
         raise NotImplementedError
 
-    def fetch_user(self, uid: int) -> User:
+    def fetch_user(self, uid: int):
         raise NotImplementedError
