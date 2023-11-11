@@ -3,7 +3,8 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class LessonDecoded:
-    name: str
+    # Index in Subjects list
+    idx: int
 
 
 @dataclass(frozen=True)
@@ -12,7 +13,7 @@ class LessonsList:
     str_repr: str
 
     def decode(self) -> list[LessonDecoded]:
-        return 
+        return [LessonDecoded(idx) for idx in self.str_repr.split(';')]
 
 
 @dataclass(frozen=True)
@@ -42,7 +43,7 @@ class Subjects:
     str_repr: str
 
     def decode(self) -> list[SubjectDecoded]:
-        return [SubjectDecoded(name=s) for s in self.split(';')]
+        return [SubjectDecoded(name=s) for s in self.str_repr.split(';')]
 
 
 @dataclass(frozen=True)
