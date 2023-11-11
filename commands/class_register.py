@@ -41,11 +41,13 @@ def weekday(bot, remains: list[str], subs):
 
 
 def finish_weekdays(bot, message, subs):
-    _subs_append(message, subs)
-    print(subs)
-    subs = list(set([item.replace(';', ' ') for lit in subs for item in lit]))
-    userssub = ";".join(subs)
-    db.update_user(message.from_user.id, subjects_str_repr=userssub)
+    subjects = _pre_handle(message, subs)
+    _update_all_subjects(message, subjects)
+    _add_hw_buttons(message, bot)
+    _create_schedule(message, subs, subjects)
+
+
+def _add_hw_buttons(message, bot):
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = KeyboardButton("Просмотр ДЗ")
     btn2 = KeyboardButton("Запись ДЗ")
@@ -54,8 +56,25 @@ def finish_weekdays(bot, message, subs):
                                       "просматривать дз", reply_markup=markup)
 
 
+def _pre_handle(message, subs):
+    _subs_append(message, subs)
+    return list(set([item.replace(';', ' ') for lit in subs for item in lit]))
+
+
+def _update_all_subjects(message, subs):
+    db.update_user(message.from_user.id, subjects_str_repr=";".join(subs))
+
+
+def _create_schedule(message, subs, subjects):
+    for idx, day in enumerate(subs):
+        dbname = f"general_schedule_wd{idx+1}_lessons_str_repr"
+        dbdata = ";".join(map(lambda s: str(subjects.index(s)), day))
+        db.update_user(message.from_user.id, **{dbname: dbdata})
+
+
 def _subs_append(message, subs):
     if message.text != "Нет уроков":
         subs.append(message.text.strip().split("\n"))
     else:
         subs.append([])
+
