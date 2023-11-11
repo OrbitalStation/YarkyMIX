@@ -3,6 +3,7 @@ import sqlite3
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from init import init
+from database import db
 
 
 if __name__ == '__main__':
@@ -15,6 +16,7 @@ def send_welcome(message):
     bot.reply_to(message,
                  "Привет, я яркий MIX средств для помощи в обучении. Если Ваш одноклассник уже зарегистрировал Ваш класс, то оправьте мне код, его можно узнать у того, кто регистрировал класс. Если Ваш класс ещё не зарегистрирован, то давайте это исправим!",
                  reply_markup=markup)
+    db.fetch_user(message.from_user.id)
 
 
 @bot.message_handler(commands=['help'])
