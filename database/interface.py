@@ -48,8 +48,18 @@ class Subjects:
 
 
 @dataclass(frozen=True)
-class HWSubject:
+class HWSubjectPresent:
     homework: str
+
+
+@dataclass(frozen=True)
+class HWSubjectNoHomework:
+    pass
+
+
+@dataclass(frozen=True)
+class HWSubjectNotSetYet:
+    pass
 
 
 @dataclass(frozen=True)
@@ -57,8 +67,8 @@ class Homework:
     # hw1::hw2::hw3::etc.
     str_repr: str
 
-    def decode(self) -> list[HWSubject]:
-        return [HWSubject(homework=hw) for hw in self.str_repr.split('::')]
+    def decode(self) -> list[HWSubjectPresent|HWSubjectNotSetYet|HWSubjectNoHomework]:
+        return [(HWSubjectPresent(homework=hw) if hw != "<not given>" else (HWSubjectNoHomework() if hw != "" else HWSubjectNotSetYet())) for hw in self.str_repr.split('::')]
 
 
 @dataclass(frozen=True)
