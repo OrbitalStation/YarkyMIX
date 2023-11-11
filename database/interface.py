@@ -54,7 +54,7 @@ class HWSubjectPresent:
 
 @dataclass(frozen=True)
 class HWSubjectNoHomework:
-    pass
+    STR_REPR = "<not given>"
 
 
 @dataclass(frozen=True)
@@ -67,8 +67,25 @@ class Homework:
     # hw1::hw2::hw3::etc.
     str_repr: str
 
+    def default(nsubjects: int):
+        return Homework("::" * (nsubjects - 1))
+
     def decode(self) -> list[HWSubjectPresent|HWSubjectNotSetYet|HWSubjectNoHomework]:
-        return [(HWSubjectPresent(homework=hw) if hw != "<not given>" else (HWSubjectNoHomework() if hw != "" else HWSubjectNotSetYet())) for hw in self.str_repr.split('::')]
+        return [(HWSubjectPresent(homework=hw) if hw != HWSubjectNoHomework.STR_REPR else
+                  (HWSubjectNoHomework() if hw != "" else HWSubjectNotSetYet())) for hw in self.str_repr.split('::')]
+
+    @staticmethod
+    def encode(lst: list[HWSubjectPresent|HWSubjectNotSetYet|HWSubjectNoHomework]):
+        def one(hw):
+            if isinstance(hw, HWSubjectPresent):
+                return hw.homework
+            elif isinstance(hw, HWSubjectNoHomework):
+                return HWSubjectNoHomework.STR_REPR
+            elif isinstance(hw, HWSubjectNotSetYet):
+                return ""
+            else:
+                assert False, "ACHTUNG!!!"
+        return Homework(sum(map(one, lst)))
 
 
 @dataclass(frozen=True)
@@ -91,10 +108,10 @@ class User:
     general_schedule: Schedule
     subjects: Subjects
 
-    @staticmethod
-    def get_hw_db(uid: int):
+    def get_hw_db(self):
         from .sqlite3 import SQLiteDB
-        return SQLiteDB(const("dbMainPath"), f"hw{uid}", HWUser)
+        DEFAULT_FOR_NEW = {f'wd{i}': getattr(self.general_schedule, f"wd{i}").lessons.str_repr.count(';') + 1 for i in range(1, 8)}
+        return SQLiteDB(const("dbMainPath"), f"hw{self.uid}", HWUser, default_values_for_new_users=DEFAULT_FOR_NEW)
 
 
 class Database:

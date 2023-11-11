@@ -37,11 +37,12 @@ def _dataclass_from_sql(dataclass: type, sql: list):
 
 
 class SQLiteDB(Database):
-    def __init__(self, path, name, user):
+    def __init__(self, path: str, name: str, user: type, default_values_for_new_users: dict[str, str] | None = None):
         self._path = path
         self._name = name
         self.__path = None
         self.__name = None
+        self._new_user_defaults = default_values_for_new_users
         self._UFIELDS = _unfold_annotations("", user)
 
     @property
@@ -61,6 +62,8 @@ class SQLiteDB(Database):
     def update_user(self, uid: int, **kwargs):
         if _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS) is None:
             _create_user(uid, self.name, self.path, self._UFIELDS)
+            if self._new_user_defaults is not None:
+                self.update_user(uid, **self._new_user_defaults)
         update = ", ".join([(field + ' = ' + '"' + value.replace('"', '""') + '"') for field, value in kwargs.items()])
         _mutate(f'UPDATE {self.name} SET {update} WHERE uid = ?', self.path, (uid,))
 
