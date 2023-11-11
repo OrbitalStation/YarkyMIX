@@ -14,7 +14,7 @@ class LessonsList:
     str_repr: str
 
     def decode(self) -> list[LessonDecoded]:
-        return [LessonDecoded(idx) for idx in self.str_repr.split(';')]
+        return [LessonDecoded(idx) for idx in self.str_repr.split(';') if idx != ""]
 
 
 @dataclass(frozen=True)
