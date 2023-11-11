@@ -11,6 +11,8 @@ if __name__ == '__main__':
 
 lessons = list()
 lessonsid = list()
+day = ""
+
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -60,9 +62,12 @@ def send_text(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    global lessons, lessonsid
+    # global lessons, lessonsid, day
     req = call.data.split('_')
-    # if req[0] == "adress_":
+    if req[0] == "adress_":
+        print(1)
+        # user = db.fetch_user(call.message.from_user.id)
+        # print(getattr(user.get_hw_db().fetch_user(1), f"wd{day}"))
     if req[0] == "weekentry":
         daykb = types.InlineKeyboardMarkup(row_width=2)
         button1 = types.InlineKeyboardButton("понедельник", callback_data='mondayentry')
@@ -76,7 +81,7 @@ def callback_inline(call):
         bot.edit_message_text(f"Выберите день недели", reply_markup=daykb, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
     if req[0] == "mondayentry":
-        # day = "monday"
+        day = "1"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
         lessons = db.fetch_user(call.message.chat.id).general_schedule.wd1.lessons.decode()
         user = db.fetch_user(call.message.chat.id)
@@ -91,7 +96,7 @@ def callback_inline(call):
         bot.edit_message_text(f'расписание на понедельник', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
     if req[0] == "tuesdayentry":
-        # day = "monday"
+        day = "2"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
         lessons = db.fetch_user(call.message.chat.id).general_schedule.wd2.lessons.decode()
         user = db.fetch_user(call.message.chat.id)
@@ -106,7 +111,7 @@ def callback_inline(call):
         bot.edit_message_text(f'расписание на вторник', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
     if req[0] == "wednesdayentry":
-        # day = "monday"
+        day = "3"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
         lessons = db.fetch_user(call.message.chat.id).general_schedule.wd3.lessons.decode()
         user = db.fetch_user(call.message.chat.id)
@@ -121,7 +126,7 @@ def callback_inline(call):
         bot.edit_message_text(f'расписание на среду', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
     if req[0] == "thursdayentry":
-        # day = "monday"
+        day = "4"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
         lessons = db.fetch_user(call.message.chat.id).general_schedule.wd4.lessons.decode()
         user = db.fetch_user(call.message.chat.id)
@@ -136,7 +141,7 @@ def callback_inline(call):
         bot.edit_message_text(f'расписание на четверг', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
     if req[0] == "fridayentry":
-        # day = "monday"
+        day = "5"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
         lessons = db.fetch_user(call.message.chat.id).general_schedule.wd5.lessons.decode()
         user = db.fetch_user(call.message.chat.id)
@@ -151,7 +156,7 @@ def callback_inline(call):
         bot.edit_message_text(f'расписание на пятница', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
     if req[0] == "saturdayentry":
-        # day = "monday"
+        day = "6"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
         lessons = db.fetch_user(call.message.chat.id).general_schedule.wd6.lessons.decode()
         user = db.fetch_user(call.message.chat.id)
@@ -166,7 +171,7 @@ def callback_inline(call):
         bot.edit_message_text(f'расписание на суббота', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
     if req[0] == "sundayentry":
-        # day = "monday"
+        day = "7"
         lessonsid = db.fetch_user(call.message.chat.id).subjects.decode()
         lessons = db.fetch_user(call.message.chat.id).general_schedule.wd7.lessons.decode()
         user = db.fetch_user(call.message.chat.id)
@@ -180,9 +185,6 @@ def callback_inline(call):
         markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"weekentry"))
         bot.edit_message_text(f'расписание на воскресенье', reply_markup=markup, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
-
-
-
 
 
 bot.polling(none_stop=True)

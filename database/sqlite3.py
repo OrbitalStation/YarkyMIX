@@ -16,12 +16,15 @@ PY2SQL = {
 
 
 def _unfold_annotations(field: str, ty: type) -> dict[str, type]:
+    print(repr(ty))
     if PY2SQL.get(ty.__name__) is not None:
         return {field: ty}
     if field != "":
         field += '_'
     result = {}
     for subfield, subty in ty.__annotations__.items():
+        if type(subty) == str:
+            subty = eval(subty)
         result.update(_unfold_annotations(field + subfield, subty))
     return result
 
