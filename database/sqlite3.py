@@ -64,7 +64,7 @@ class SQLiteDB(Database):
         update = ", ".join([(field + ' = ' + '"' + value.replace('"', '""') + '"') for field, value in kwargs.items()])
         _mutate(f'UPDATE {self.name} SET {update} WHERE uid = ?', self.path, (uid,))
 
-    def fetch_user(self, uid: int) -> User:
+    def fetch_user(self, uid: int):
         if (fetched := _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)) is None:
             _create_user(uid, self.name, self.path, self._UFIELDS)
             fetched = _fetch_user_or_none_if_nonpresent(uid, self.name, self.path, self._UFIELDS)

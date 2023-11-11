@@ -48,8 +48,17 @@ class Subjects:
 
 
 @dataclass(frozen=True)
+class HWSubject:
+    homework: str
+
+
+@dataclass(frozen=True)
 class Homework:
-    value: str
+    # hw1::hw2::hw3::etc.
+    str_repr: str
+
+    def decode(self) -> list[HWSubject]:
+        return [HWSubject(homework=hw) for hw in self.str_repr.split('::')]
 
 
 @dataclass(frozen=True)
