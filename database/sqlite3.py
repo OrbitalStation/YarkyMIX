@@ -40,58 +40,76 @@ UFIELDS = _unfold_annotations("", User)
 
 
 class SQLiteDB(Database):
-    @staticmethod
-    def update_user(uid: int, **kwargs):
-        if _fetch_user_or_none_if_nonpresent(uid) is None:
-            _create_user(uid)
-        update = ", ".join([(field + ' = ' + '"' + value.replace('"', '""') + '"') for field, value in kwargs.items()])
-        _mutate(f'UPDATE {const("dbTableName")} SET {update} WHERE uid = ?', (uid,))
+    def __init__(self, path, name):
+        self._path = path
+        self._name = name
+        self.__path = None
+        self.__name = None
 
-    @staticmethod
-    def fetch_user(uid: int) -> User:
-        if (fetched := _fetch_user_or_none_if_nonpresent(uid)) is None:
+    @property
+    def path(self):
+        if self.__path is None:
+            self.__path = self._path() if callable(self._path) else self._path
+            del self._path
+        return self.__path
+    
+    @property
+    def name(self):
+        if self.__name is None:
+            self.__name = self._name() if callable(self._name) else self._name
+            del self._name
+        return self.__name
+
+    def update_user(self, uid: int, **kwargs):
+        if _fetch_user_or_none_if_nonpresent(uid, self.name, self.path) is None:
+            _create_user(uid, self.name, self.path)
+        update = ", ".join([(field + ' = ' + '"' + value.replace('"', '""') + '"') for field, value in kwargs.items()])
+        _mutate(f'UPDATE {self.name} SET {update} WHERE uid = ?', self.path, (uid,))
+
+    def fetch_user(self, uid: int) -> User:
+        if (fetched := _fetch_user_or_none_if_nonpresent(uid, self.name, self.path)) is None:
             _create_user(uid)
-            fetched = _fetch_user_or_none_if_nonpresent(uid)
+            fetched = _fetch_user_or_none_if_nonpresent(uid, self.name, self.path)
         return fetched
 
 
-def _fetch_user_or_none_if_nonpresent(uid: int) -> User | None:
-    _create_table_if_not_exists()
-    if (fetched := _fetch(f"SELECT * FROM {const('dbTableName')} WHERE uid=?", (uid,)).fetchone()) is None:
+def _fetch_user_or_none_if_nonpresent(uid: int, name, path) -> User | None:
+    _create_table_if_not_exists(name, path)
+    if (fetched := _fetch(f"SELECT * FROM {name} WHERE uid=?", path, (uid,)).fetchone()) is None:
         return
     return _dataclass_from_sql(User, list(fetched)[::-1])
 
 
-def _create_table_if_not_exists():
+def _create_table_if_not_exists(name, path):
     global CREATE_TABLE_SQL
     if CREATE_TABLE_SQL is None:
         fields = ', '.join(
             [f'{field} {PY2SQL[value.__name__]}{" PRIMARY KEY" if field == "uid" else ""}'
              for field, value in UFIELDS.items()])
-        CREATE_TABLE_SQL = f"CREATE TABLE IF NOT EXISTS {const('dbTableName')}({fields});"
-    _mutate(CREATE_TABLE_SQL)
+        CREATE_TABLE_SQL = f"CREATE TABLE IF NOT EXISTS {name}({fields});"
+    _mutate(CREATE_TABLE_SQL, path)
 
 
-def _create_user(uid: int):
+def _create_user(uid: int, name, path):
     global CREATE_USER_SQL
 
     if CREATE_USER_SQL is None:
         fields, values = zip(*[(field, ty()) for field, ty in UFIELDS.items() if field != 'uid'])
         placeholders = ('?,' * len(UFIELDS))[:-1]
-        CREATE_USER_SQL = f"INSERT INTO {const('dbTableName')}" \
+        CREATE_USER_SQL = f"INSERT INTO {name}" \
                           f" (uid, {', '.join(fields)}) VALUES({placeholders});", values
-    _mutate(CREATE_USER_SQL[0], (uid, *CREATE_USER_SQL[1]))
+    _mutate(CREATE_USER_SQL[0], path, (uid, *CREATE_USER_SQL[1]))
 
 
-def _mutate(request: str, *args, **kwargs):
-    con = sqlite3.connect(const("dbPath"))
+def _mutate(request: str, path, *args, **kwargs):
+    con = sqlite3.connect(path)
     cur = con.cursor()
     cur.execute(request, *args, **kwargs)
     con.commit()
     cur.close()
 
 
-def _fetch(request: str, *args, **kwargs) -> Cursor:
-    con = sqlite3.connect(const("dbPath"))
+def _fetch(request: str, path, *args, **kwargs) -> Cursor:
+    con = sqlite3.connect(path)
     cur = con.cursor()
     return cur.execute(request, *args, **kwargs)

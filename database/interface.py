@@ -55,10 +55,8 @@ class User:
 
 
 class Database:
-    @staticmethod
-    def update_user(uid: int, **fields):
+    def update_user(self, uid: int, **fields):
         raise NotImplementedError
 
-    @staticmethod
-    def fetch_user(uid: int) -> User:
+    def fetch_user(self, uid: int) -> User:
         raise NotImplementedError
