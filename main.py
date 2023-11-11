@@ -1,11 +1,13 @@
 import telebot
 import sqlite3
 from telebot import types
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-bot = telebot.TeleBot("6416571576:AAHVyBe42u5V2wphhMeYWlerGVS7_30MDro")
+bot = telebot.TeleBot("TOKEN")
 
 user = ""
 
+day = ""
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -38,38 +40,51 @@ def send_text(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    if call.message:
-        if call.data == "monday":
-            monday(call)
+    global day
+    req = call.data.split('_')
+    if req[0] == "monday":
+        day = "monday"
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton(text=f"физика", callback_data='physics'),
+                   InlineKeyboardButton(text=f"математика", callback_data=f'math'))
+        markup.add(InlineKeyboardButton(text=f"история", callback_data='history'),
+                   InlineKeyboardButton(text=f"русский язык", callback_data='russian'))
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=f"week"))
+        bot.edit_message_text(f'расписание на понедельник', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "physics":
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton(text=f"назад", callback_data=day))
+        bot.edit_message_text(f'п19 и номера 123,124', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+    if req[0] == "week":
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton(text=f"понедельник", callback_data='monday'),
+                   InlineKeyboardButton(text=f"вторник", callback_data='tuesday'))
+        markup.add(InlineKeyboardButton(text=f"среда", callback_data='wednesday'),
+                   InlineKeyboardButton(text=f"черверг", callback_data='thursday'))
+        markup.add(InlineKeyboardButton(text=f"пятница", callback_data='friday'),
+                   InlineKeyboardButton(text=f"суббота", callback_data='saturday'))
+        bot.edit_message_text(f'Выберите день недели', reply_markup=markup, chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+        '''
+if call.data == "tuesday":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
 
-        if call.data == "tuesday":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+    if call.data == "wednesday":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
 
-        if call.data == "wednesday":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+    if call.data == "thursday'":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
 
-        if call.data == "thursday'":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+    if call.data == "friday":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
 
-        if call.data == "friday":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+    if call.data == "saturday":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
 
-        if call.data == "saturday":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+    if call.data == "phisics":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+'''
 
-        if call.data == "phisics":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
-
-def monday(call):
-    lessonskb = types.InlineKeyboardMarkup(row_width=2)
-    button1 = types.InlineKeyboardButton("физика", callback_data='physics')
-    button2 = types.InlineKeyboardButton("математика", callback_data='math')
-    button3 = types.InlineKeyboardButton("история", callback_data='history')
-    button4 = types.InlineKeyboardButton("русский язык", callback_data='russian')
-    lessonskb.add(button1, button2, button3, button4)
-    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="расписание "
-                                                                                                 "на "
-                                                                                                 "понедельник",
-                          reply_markup=lessonskb)
-
-bot.infinity_polling()
+bot.polling(none_stop=True)
