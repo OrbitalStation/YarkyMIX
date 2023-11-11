@@ -5,6 +5,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from init import init
 
 
+if __name__ == '__main__':
+    bot = init()
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -97,6 +99,5 @@ if call.data == "tuesday":
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
 '''
 
-if __name__ == '__main__':
-    bot = init()
-    bot.polling(none_stop=True)
+
+bot.polling(none_stop=True)
